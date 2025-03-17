@@ -1,5 +1,4 @@
-﻿// IFileSystemService.cs
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using FileManagerApp.Models;
@@ -8,33 +7,31 @@ namespace FileManagerApp.Services
 {
     public interface IFileSystemService
     {
-        // Get contents of a directory
+        // Retrieve the contents of a directory.
         Task<DirectoryContentModel> GetDirectoryContentsAsync(string relativePath);
 
-        // Download a file
+        // Download a file from the specified relative path.
         Task<(byte[] FileContents, string ContentType, string FileName)> GetFileAsync(string relativePath);
 
-        // Upload a file to a directory
+        // Upload a file to a specific directory.
         Task<FileOperationResult> UploadFileAsync(string relativePath, IFormFile file);
 
-        // Create a new directory
+        // Create a new directory at the specified relative path.
         Task<FileOperationResult> CreateDirectoryAsync(string relativePath);
 
-        // Delete a file or directory
+        // Delete a file or directory at the specified relative path.
         Task<FileOperationResult> DeleteItemAsync(string relativePath);
 
-        // search by name
+        // Search for files and folders matching the query.
         Task<List<FileItemModel>> SearchFilesAndFoldersAsync(string query);
 
-        // get info
+        // Retrieve detailed information about a file or folder.
         Task<FileItemModel> GetFileOrFolderInfoAsync(string relativePath);
 
-
-        // Validate a path is within the root directory
+        // Validate that the provided relative path is safe.
         bool IsPathSafe(string relativePath);
 
-        // Get the full system path from relative path
+        // Get the full system path from the given relative path.
         string GetFullPath(string relativePath);
-
     }
 }

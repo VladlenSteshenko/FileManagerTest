@@ -5,45 +5,33 @@ using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// -------------------------
 // Add services to the container.
+// -------------------------
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register the helper as a singleton since it's stateless.
+// Register the PathHelper as a singleton (stateless helper).
 builder.Services.AddSingleton<PathHelper>();
 
-// Register your file system service implementation
+// Register the FileSystemService implementation for file management.
 builder.Services.AddSingleton<IFileSystemService, FileSystemService>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    /*
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "FileManager API v1");
-        // Set the Swagger UI at the root path
-        c.RoutePrefix = "swagger";
-    });
-    */
-}
-
 app.UseHttpsRedirection();
 
-// Serve static files from wwwroot (this is where your front-end lives)
+// Serve static files (frontend assets) from wwwroot.
 app.UseStaticFiles();
 
 app.UseAuthorization();
 
-// Map API controllers.
+// Map API controllers to endpoints.
 app.MapControllers();
 
-// Fallback to serve index.html for SPA routes.
+// Fallback to serve index.html for Single Page Application (SPA) routes.
 app.MapFallbackToFile("index.html");
-
 
 app.Run();

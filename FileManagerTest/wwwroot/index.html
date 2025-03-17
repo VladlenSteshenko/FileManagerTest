@@ -3,47 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <title>File Manager App</title>
+    <!-- Link to external CSS stylesheet -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <!-- Main container for the file manager -->
     <div class="container">
+        <!-- Header section -->
         <header>
             <h1>File Manager</h1>
         </header>
 
-        <!-- Search bar -->
+        <!-- ------------------------- -->
+        <!-- Search Bar Section -->
+        <!-- ------------------------- -->
         <div class="search-container">
             <input type="text" id="searchInput" placeholder="Search files or folders..." />
             <button id="searchBtn">Search</button>
             <button id="clearSearchBtn">Clear</button>
         </div>
 
-        <!-- Upload File Form -->
+        <!-- ------------------------- -->
+        <!-- Upload File Form Section -->
+        <!-- ------------------------- -->
         <div class="upload-container">
             <input type="file" id="fileInput">
             <button id="uploadBtn">Upload File</button>
         </div>
 
-        <!-- Create Folder Form -->
+        <!-- ------------------------- -->
+        <!-- Create Folder Form Section -->
+        <!-- ------------------------- -->
         <div class="create-folder-container">
             <input type="text" id="folderNameInput" placeholder="New folder name">
             <button id="createFolderBtn">Create Folder</button>
         </div>
 
-        <!-- Breadcrumb navigation -->
+        <!-- ------------------------- -->
+        <!-- Breadcrumb Navigation -->
+        <!-- ------------------------- -->
         <nav id="breadcrumb"></nav>
 
-        <!-- Explorer area -->
+        <!-- ------------------------- -->
+        <!-- Explorer Area for Files and Folders -->
+        <!-- ------------------------- -->
         <section id="explorer"></section>
 
-        <!-- Modal for displaying file/folder info -->
+        <!-- ------------------------- -->
+        <!-- Modal for Displaying File/Folder Info -->
+        <!-- ------------------------- -->
         <div id="modal" class="modal">
             <div class="modal-content">
+                <!-- Close button for the modal -->
                 <span class="close-button">&times;</span>
+                <!-- Modal body where file/folder information will be rendered -->
                 <div id="modal-body"></div>
             </div>
         </div>
     </div>
+    <!-- Link to external JavaScript file -->
     <script src="js/app.js"></script>
 </body>
 </html>

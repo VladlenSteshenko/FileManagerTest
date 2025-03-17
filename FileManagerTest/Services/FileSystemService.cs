@@ -1,5 +1,4 @@
-﻿// FileSystemService.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,19 +14,24 @@ namespace FileManagerApp.Services
 {
     public class FileSystemService : IFileSystemService
     {
+        // Root directory where files are managed.
         private readonly string _rootDirectory;
+
+        // Helper for path sanitization and validation.
         private readonly PathHelper _pathHelper;
+
+        // Path to the application executable (used to prevent deletion).
         private readonly string _executablePath;
 
         public FileSystemService(IConfiguration configuration, PathHelper pathHelper)
         {
-            // Set root directory to the directory where the program is running
+            // Set the root directory to the directory where the application is running.
             _rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
-            // Store the path to the application executable
+            // Get the executable path.
             _executablePath = Assembly.GetEntryAssembly().Location;
 
-            // Create the directory if it doesn't exist
+            // Ensure that the root directory exists.
             if (!Directory.Exists(_rootDirectory))
             {
                 Directory.CreateDirectory(_rootDirectory);
@@ -36,6 +40,7 @@ namespace FileManagerApp.Services
             _pathHelper = pathHelper;
         }
 
+        // Retrieves the contents of a directory, including subdirectories and files.
         public async Task<DirectoryContentModel> GetDirectoryContentsAsync(string relativePath)
         {
             if (!IsPathSafe(relativePath))
@@ -58,7 +63,7 @@ namespace FileManagerApp.Services
                 Items = new List<FileItemModel>()
             };
 
-            // Add directories
+            // Add directories to the model.
             foreach (var dir in directoryInfo.GetDirectories())
             {
                 model.Items.Add(new FileItemModel
@@ -70,7 +75,7 @@ namespace FileManagerApp.Services
                 });
             }
 
-            // Add files
+            // Add files to the model.
             foreach (var file in directoryInfo.GetFiles())
             {
                 model.Items.Add(new FileItemModel
@@ -84,7 +89,7 @@ namespace FileManagerApp.Services
                 });
             }
 
-            // Sort items: directories first, then files
+            // Sort items: directories first, then files; then sort alphabetically.
             model.Items = model.Items
                 .OrderBy(i => !i.IsDirectory)
                 .ThenBy(i => i.Name)
@@ -93,6 +98,7 @@ namespace FileManagerApp.Services
             return await Task.FromResult(model);
         }
 
+        // Retrieves a file as a byte array along with its content type and file name.
         public async Task<(byte[] FileContents, string ContentType, string FileName)> GetFileAsync(string relativePath)
         {
             if (!IsPathSafe(relativePath))
@@ -114,6 +120,7 @@ namespace FileManagerApp.Services
             return (fileContents, contentType, fileInfo.Name);
         }
 
+        // Uploads a file to the specified directory.
         public async Task<FileOperationResult> UploadFileAsync(string relativePath, IFormFile file)
         {
             if (!IsPathSafe(relativePath))
@@ -130,6 +137,7 @@ namespace FileManagerApp.Services
             {
                 string directoryPath = GetFullPath(relativePath);
 
+                // Create the directory if it doesn't exist.
                 if (!Directory.Exists(directoryPath))
                 {
                     Directory.CreateDirectory(directoryPath);
@@ -137,6 +145,7 @@ namespace FileManagerApp.Services
 
                 string filePath = Path.Combine(directoryPath, file.FileName);
 
+                // Save the uploaded file.
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
@@ -155,6 +164,7 @@ namespace FileManagerApp.Services
             }
         }
 
+        // Creates a new directory at the specified relative path.
         public async Task<FileOperationResult> CreateDirectoryAsync(string relativePath)
         {
             if (!IsPathSafe(relativePath))
@@ -186,6 +196,7 @@ namespace FileManagerApp.Services
             }
         }
 
+        // Deletes a file or directory (recursively for directories).
         public async Task<FileOperationResult> DeleteItemAsync(string relativePath)
         {
             if (!IsPathSafe(relativePath))
@@ -193,7 +204,7 @@ namespace FileManagerApp.Services
                 return new FileOperationResult { Success = false, Message = "Access to the path is denied." };
             }
 
-            // Prevent deletion of the root directory itself
+            // Prevent deletion of the root directory.
             if (string.IsNullOrEmpty(relativePath))
             {
                 return new FileOperationResult { Success = false, Message = "Cannot delete the root directory." };
@@ -203,20 +214,19 @@ namespace FileManagerApp.Services
             {
                 string fullPath = GetFullPath(relativePath);
 
-                // Check to prevent deletion of root directory
+                // Prevent deletion if the full path matches the root directory.
                 if (Path.GetFullPath(fullPath).Equals(Path.GetFullPath(_rootDirectory), StringComparison.OrdinalIgnoreCase))
                 {
                     return new FileOperationResult { Success = false, Message = "Cannot delete the root directory." };
                 }
 
-                // Check if trying to delete the executable or a file that matches its name
+                // If the path points to a file, delete the file.
                 if (File.Exists(fullPath))
                 {
-                    // Get the filename without path from the full path and executable path
                     string fileNameToDelete = Path.GetFileName(fullPath);
                     string executableFileName = Path.GetFileName(_executablePath);
 
-                    // If trying to delete the application executable, prevent it
+                    // Prevent deletion of the application executable.
                     if (string.Equals(fileNameToDelete, executableFileName, StringComparison.OrdinalIgnoreCase) ||
                         Path.GetFullPath(fullPath).Equals(Path.GetFullPath(_executablePath), StringComparison.OrdinalIgnoreCase))
                     {
@@ -232,15 +242,16 @@ namespace FileManagerApp.Services
                     });
                 }
 
+                // If the path points to a directory, delete it recursively.
                 if (Directory.Exists(fullPath))
                 {
-                    // Check if this directory contains the executable
+                    // Prevent deletion of a directory that contains the executable.
                     if (_executablePath.StartsWith(fullPath, StringComparison.OrdinalIgnoreCase))
                     {
                         return new FileOperationResult { Success = false, Message = "Cannot delete a directory containing the application executable." };
                     }
 
-                    Directory.Delete(fullPath, true); // Recursive delete
+                    Directory.Delete(fullPath, true);
                     return await Task.FromResult(new FileOperationResult
                     {
                         Success = true,
@@ -257,6 +268,7 @@ namespace FileManagerApp.Services
             }
         }
 
+        // Searches for files and folders matching the provided query string.
         public async Task<List<FileItemModel>> SearchFilesAndFoldersAsync(string query)
         {
             var results = new List<FileItemModel>();
@@ -265,6 +277,7 @@ namespace FileManagerApp.Services
             {
                 try
                 {
+                    // Search for directories that contain the query.
                     var directories = Directory.GetDirectories(_rootDirectory, "*", SearchOption.AllDirectories)
                         .Where(d => Path.GetFileName(d).Contains(query, StringComparison.OrdinalIgnoreCase))
                         .Select(d => new FileItemModel
@@ -274,6 +287,7 @@ namespace FileManagerApp.Services
                             IsDirectory = true
                         });
 
+                    // Search for files that contain the query.
                     var files = Directory.GetFiles(_rootDirectory, "*", SearchOption.AllDirectories)
                         .Where(f => Path.GetFileName(f).Contains(query, StringComparison.OrdinalIgnoreCase))
                         .Select(f => new FileItemModel
@@ -295,6 +309,7 @@ namespace FileManagerApp.Services
             return results;
         }
 
+        // Retrieves detailed information about a file or folder.
         public async Task<FileItemModel> GetFileOrFolderInfoAsync(string relativePath)
         {
             if (!IsPathSafe(relativePath))
@@ -312,7 +327,7 @@ namespace FileManagerApp.Services
                     Name = dirInfo.Name,
                     Path = relativePath,
                     IsDirectory = true,
-                    Size = 0, // Size can be set to 0 or calculated if needed
+                    Size = 0, // Directory size set to 0 (or calculated if needed).
                     LastModified = dirInfo.LastWriteTime,
                     ContentType = "folder"
                 });
@@ -336,14 +351,15 @@ namespace FileManagerApp.Services
             }
         }
 
+        // Validates that the given relative path is safe with respect to the root directory.
         public bool IsPathSafe(string relativePath)
         {
             return _pathHelper.IsPathSafe(_rootDirectory, relativePath);
         }
 
+        // Combines the root directory with the sanitized relative path to form the full system path.
         public string GetFullPath(string relativePath)
         {
-            // Clean the relative path and combine with root
             string sanitizedPath = _pathHelper.SanitizePath(relativePath);
             return Path.Combine(_rootDirectory, sanitizedPath);
         }

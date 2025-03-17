@@ -1,4 +1,6 @@
-﻿:root {
+﻿/* style.css - Main stylesheet for the File Manager App */
+/* Define CSS variables for consistent theming */
+:root {
     --primary-color: #0078D4;
     --background-color: #f3f3f3;
     --container-background: #ffffff;
@@ -10,6 +12,9 @@
     --rounded: 6px;
 }
 
+/* ------------------------- */
+/* Global Styles             */
+/* ------------------------- */
 body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -17,6 +22,7 @@ body {
     color: var(--text-color);
 }
 
+/* Container for centering content and adding padding */
 .container {
     max-width: 900px;
     margin: 2em auto;
@@ -26,7 +32,9 @@ body {
     box-shadow: var(--shadow);
 }
 
-/* Header */
+/* ------------------------- */
+/* Header Styles             */
+/* ------------------------- */
 header h1 {
     margin: 0;
     padding-bottom: 0.5em;
@@ -35,7 +43,9 @@ header h1 {
     text-align: center;
 }
 
-/* Search Bar */
+/* ------------------------- */
+/* Search Bar Styles         */
+/* ------------------------- */
 .search-container {
     margin: 1em 0;
     display: flex;
@@ -65,7 +75,9 @@ header h1 {
             background-color: #005ea6;
         }
 
-/* Upload File Form */
+/* ------------------------- */
+/* Upload File Form Styles   */
+/* ------------------------- */
 .upload-container {
     margin: 1em 0;
     display: flex;
@@ -99,7 +111,9 @@ header h1 {
             background-color: #005ea6;
         }
 
-/* Create Folder Form */
+/* ------------------------- */
+/* Create Folder Form Styles */
+/* ------------------------- */
 .create-folder-container {
     margin: 1em 0;
     display: flex;
@@ -134,7 +148,9 @@ header h1 {
             background-color: #005ea6;
         }
 
-/* Breadcrumb Navigation */
+/* ------------------------- */
+/* Breadcrumb Navigation     */
+/* ------------------------- */
 nav#breadcrumb {
     margin: 1em 0;
     font-size: 0.95em;
@@ -149,7 +165,9 @@ nav#breadcrumb {
             text-decoration: underline;
         }
 
-/* Back Button */
+/* ------------------------- */
+/* Back Button Styles        */
+/* ------------------------- */
 .back-btn {
     display: inline-block;
     padding: 0.5em 1em;
@@ -166,7 +184,9 @@ nav#breadcrumb {
         background-color: #005ea6;
     }
 
-/* Explorer List */
+/* ------------------------- */
+/* Explorer List Styles      */
+/* ------------------------- */
 #explorer {
     margin-top: 1em;
 }
@@ -195,6 +215,9 @@ nav#breadcrumb {
         font-size: 1em;
     }
 
+/* ------------------------- */
+/* Action Buttons (Info, Download, Delete) */
+/* ------------------------- */
 .info-btn, .download-btn {
     margin-left: 5px;
     padding: 3px 8px;
@@ -214,8 +237,11 @@ nav#breadcrumb {
         background-color: #d4edda;
     }
 
-/* Modal Styles */
-/* Modal Styles Enhancements */
+/* ------------------------- */
+/* Modal Styles and Animations */
+/* ------------------------- */
+
+/* Modal overlay and fadeIn animation */
 .modal {
     display: none;
     position: fixed;
@@ -228,6 +254,7 @@ nav#breadcrumb {
     animation: fadeIn 0.3s ease;
 }
 
+/* Modal content container with slideIn animation */
 .modal-content {
     background-color: var(--container-background);
     margin: 10% auto;
@@ -241,6 +268,7 @@ nav#breadcrumb {
     animation: slideIn 0.3s ease;
 }
 
+/* Keyframe for fade in animation */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -251,6 +279,7 @@ nav#breadcrumb {
     }
 }
 
+/* Keyframe for slide in animation */
 @keyframes slideIn {
     from {
         transform: translateY(-20px);
@@ -263,6 +292,7 @@ nav#breadcrumb {
     }
 }
 
+/* Close button styles for modal */
 .close-button {
     position: absolute;
     top: 10px;
@@ -280,6 +310,7 @@ nav#breadcrumb {
         color: var(--primary-color);
     }
 
+/* Modal header styling */
 .modal-content h2 {
     margin-top: 0;
     font-size: 1.5em;
@@ -289,7 +320,9 @@ nav#breadcrumb {
     margin-bottom: 1em;
 }
 
-
+/* ------------------------- */
+/* Delete Button Styles      */
+/* ------------------------- */
 .delete-btn {
     background-color: transparent;
     border: none;

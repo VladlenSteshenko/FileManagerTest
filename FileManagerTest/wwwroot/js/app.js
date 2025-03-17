@@ -1,12 +1,24 @@
-﻿let currentDirectoryData = null;
+﻿// app.js - Main JavaScript file for the File Manager App
+// This script handles UI interactions, API calls, and dynamic rendering
+// of the file explorer, search functionality, file uploads, folder creation,
+// and modal operations.
 
+// Global variable to hold the current directory data
+let currentDirectoryData = null;
+
+// Wait for the DOM to fully load before running scripts
 document.addEventListener('DOMContentLoaded', () => {
-    // Modal initialization
+    // -------------------------
+    // Modal Initialization
+    // -------------------------
     const modal = document.getElementById('modal');
     const closeButton = document.querySelector('.close-button');
+
+    // Close modal when the close button is clicked
     closeButton.addEventListener('click', () => {
         closeModal();
     });
+
     // Close modal when clicking outside the modal content
     window.addEventListener('click', (event) => {
         if (event.target === modal) {
@@ -14,10 +26,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Handle navigation changes
+    // -------------------------
+    // Navigation and Hash Change
+    // -------------------------
+    // Update the file explorer when the URL hash changes (directory navigation)
     window.addEventListener('hashchange', loadDirectory);
 
-    // Search functionality
+    // -------------------------
+    // Search Functionality
+    // -------------------------
     document.getElementById('searchBtn').addEventListener('click', () => {
         const query = document.getElementById('searchInput').value.trim();
         if (query) {
@@ -25,12 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Clear search input and reload directory when clear button is clicked
     document.getElementById('clearSearchBtn').addEventListener('click', () => {
         document.getElementById('searchInput').value = '';
         loadDirectory();
     });
 
-    // File Upload functionality
+    // -------------------------
+    // File Upload Functionality
+    // -------------------------
     document.getElementById('uploadBtn').addEventListener('click', () => {
         const fileInput = document.getElementById('fileInput');
         const file = fileInput.files[0];
@@ -43,13 +63,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append("file", file);
 
-        // Explicitly check if currentPath is empty
+        // Check if the current path is root
         const isRootDirectory = currentPath === "" || currentPath === "#";
 
+        // Choose the proper endpoint based on the current directory
         const endpoint = isRootDirectory ?
             '/api/files/upload-root' :
             '/api/files/upload?path=' + encodeURIComponent(currentPath);
 
+        // Send the file to the server via a POST request
         fetch(endpoint, {
             method: 'POST',
             body: formData
@@ -62,8 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(result => {
                 alert(result.message);
-                loadDirectory();
-                fileInput.value = "";
+                loadDirectory(); // Refresh the directory view
+                fileInput.value = ""; // Clear the file input
             })
             .catch(error => {
                 console.error("Upload error:", error);
@@ -71,7 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     });
 
-    // Create Folder functionality
+    // -------------------------
+    // Create Folder Functionality
+    // -------------------------
     document.getElementById('createFolderBtn').addEventListener('click', () => {
         const folderNameInput = document.getElementById('folderNameInput');
         const folderName = folderNameInput.value.trim();
@@ -80,9 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         let currentPath = decodeURIComponent(location.hash.substring(1));
-        // Determine the proper separator if a current path exists
+        // Determine proper separator based on current path
         const separator = currentPath ? (currentPath.includes('\\') ? '\\' : '/') : '';
         const newFolderPath = currentPath ? (currentPath + separator + folderName) : folderName;
+
+        // Send request to create a new folder
         fetch('/api/files/directory?path=' + encodeURIComponent(newFolderPath), {
             method: 'POST'
         })
@@ -94,23 +120,31 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(result => {
                 alert(result.message);
-                loadDirectory();
-                folderNameInput.value = "";
+                loadDirectory(); // Refresh directory view
+                folderNameInput.value = ""; // Clear the folder name input
             })
             .catch(error => {
                 alert("Folder creation failed: " + error.message);
             });
     });
 
-    // Initial load of the directory view
+    // -------------------------
+    // Initial Directory Load
+    // -------------------------
     loadDirectory();
 });
 
+// -------------------------
+// Directory and Search Functions
+// -------------------------
+
+// Load the directory based on the current URL hash
 function loadDirectory() {
     let path = decodeURIComponent(location.hash.substring(1));
     fetchDirectory(path);
 }
 
+// Fetch the directory content from the API
 function fetchDirectory(path) {
     const apiUrl = '/api/files/directory?path=' + encodeURIComponent(path);
     fetch(apiUrl)
@@ -124,6 +158,7 @@ function fetchDirectory(path) {
         });
 }
 
+// Perform a search query using the API
 function performSearch(query) {
     const apiUrl = '/api/files/search?query=' + encodeURIComponent(query);
     fetch(apiUrl)
@@ -134,22 +169,29 @@ function performSearch(query) {
         });
 }
 
+// Render search results in the explorer area
 function renderSearchResults(items) {
     const explorer = document.getElementById('explorer');
     explorer.innerHTML = '';
-    // Update breadcrumb for search results
+    // Update breadcrumb to show that these are search results
     document.getElementById('breadcrumb').innerHTML = `<span>Search Results</span>`;
     items.forEach(item => {
         const listItem = document.createElement('div');
         listItem.className = 'list-item';
+
+        // Create and append icon based on whether it's a directory or file
         const icon = document.createElement('div');
         icon.className = 'icon';
         icon.innerText = item.isDirectory ? '📁' : '📄';
         listItem.appendChild(icon);
+
+        // Append the item name
         const name = document.createElement('div');
         name.className = 'name';
         name.innerText = item.name;
         listItem.appendChild(name);
+
+        // Directory navigation or file download
         if (item.isDirectory) {
             listItem.addEventListener('click', () => {
                 location.hash = encodeURIComponent(item.path);
@@ -167,7 +209,7 @@ function renderSearchResults(items) {
             listItem.appendChild(downloadBtn);
         }
 
-        // Delete button for files and folders
+        // Delete button for both files and folders
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';
         deleteBtn.innerText = '🗑️';
@@ -177,7 +219,7 @@ function renderSearchResults(items) {
         });
         listItem.appendChild(deleteBtn);
 
-        // Info button
+        // Info button to view details in a modal
         const infoBtn = document.createElement('button');
         infoBtn.className = 'info-btn';
         infoBtn.innerText = 'ℹ️';
@@ -187,16 +229,21 @@ function renderSearchResults(items) {
         });
         listItem.appendChild(infoBtn);
 
+        // Append the list item to the explorer container
         explorer.appendChild(listItem);
     });
 }
+
+// Render the directory view (folders and files)
 function renderDirectory(data) {
     const explorer = document.getElementById('explorer');
     explorer.innerHTML = '';
+
+    // Update breadcrumb navigation
     const breadcrumb = document.getElementById('breadcrumb');
     breadcrumb.innerHTML = generateBreadcrumb(data.currentPath);
 
-    // Add back button if not in root
+    // If not at the root directory, add a "Back" button to navigate to parent folder
     if (data.currentPath && data.currentPath !== "") {
         let parentPath = data.parentPath;
         if (!parentPath) {
@@ -216,22 +263,24 @@ function renderDirectory(data) {
         }
     }
 
-    // Render directory items
+    // Render each item (file/folder) in the directory
     data.items.forEach(item => {
         const listItem = document.createElement('div');
         listItem.className = 'list-item';
 
+        // Create icon for item
         const icon = document.createElement('div');
         icon.className = 'icon';
         icon.innerText = item.isDirectory ? '📁' : '📄';
         listItem.appendChild(icon);
 
+        // Append the name of the item
         const name = document.createElement('div');
         name.className = 'name';
         name.innerText = item.name;
         listItem.appendChild(name);
 
-        // Navigate to folder on click
+        // Directory navigation or file download
         if (item.isDirectory) {
             listItem.addEventListener('click', () => {
                 location.hash = encodeURIComponent(item.path);
@@ -248,7 +297,7 @@ function renderDirectory(data) {
             listItem.appendChild(downloadBtn);
         }
 
-        // Delete button for files and folders
+        // Delete button for both files and folders
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';
         deleteBtn.innerText = '🗑️';
@@ -258,7 +307,7 @@ function renderDirectory(data) {
         });
         listItem.appendChild(deleteBtn);
 
-        // Info button to show file/folder info in a modal
+        // Info button to display file/folder information in a modal popup
         const infoBtn = document.createElement('button');
         infoBtn.className = 'info-btn';
         infoBtn.innerText = 'ℹ️';
@@ -268,17 +317,23 @@ function renderDirectory(data) {
         });
         listItem.appendChild(infoBtn);
 
+        // Append the list item to the explorer container
         explorer.appendChild(listItem);
     });
 }
 
+// -------------------------
+// File Operations
+// -------------------------
+
+// Delete a file or folder after confirmation
 function deleteFileOrFolder(path, isDirectory) {
-    // Confirm deletion
     const itemType = isDirectory ? 'folder' : 'file';
     const confirmMessage = `Are you sure you want to delete this ${itemType}?`;
 
+    // Confirm deletion with the user
     if (!confirm(confirmMessage)) {
-        return; // User cancelled the operation
+        return;
     }
 
     const apiUrl = `/api/files?path=${encodeURIComponent(path)}`;
@@ -295,8 +350,7 @@ function deleteFileOrFolder(path, isDirectory) {
         .then(result => {
             if (result.success) {
                 alert(result.message);
-                // Reload the current directory to reflect changes
-                loadDirectory();
+                loadDirectory(); // Refresh directory view to reflect changes
             } else {
                 alert(`Failed to delete: ${result.message}`);
             }
@@ -307,7 +361,11 @@ function deleteFileOrFolder(path, isDirectory) {
         });
 }
 
-// Opens the modal with the provided content
+// -------------------------
+// Modal Functions
+// -------------------------
+
+// Open the modal and display content
 function openModal(content) {
     const modal = document.getElementById('modal');
     const modalBody = document.getElementById('modal-body');
@@ -315,13 +373,13 @@ function openModal(content) {
     modal.style.display = 'block';
 }
 
-// Closes the modal
+// Close the modal
 function closeModal() {
     const modal = document.getElementById('modal');
     modal.style.display = 'none';
 }
 
-// getFileInfo now displays information in a modal popup
+// Fetch file/folder information and display it in a modal
 function getFileInfo(filePath) {
     const apiUrl = `/api/files/info?path=${encodeURIComponent(filePath)}`;
 
@@ -349,6 +407,7 @@ function getFileInfo(filePath) {
         });
 }
 
+// Download a file by creating a temporary link and triggering a click
 function downloadFile(filePath) {
     const apiUrl = `/api/files/download?path=${encodeURIComponent(filePath)}`;
 
@@ -357,17 +416,17 @@ function downloadFile(filePath) {
             if (!response.ok) {
                 return response.text().then(error => Promise.reject(error));
             }
-            return response.blob(); // Get file content as a Blob
+            return response.blob(); // Retrieve file as a Blob
         })
         .then(blob => {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            a.download = filePath.split('/').pop(); // Extract the filename
+            a.download = filePath.split('/').pop(); // Extract the file name
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url); // Clean up the object URL
+            window.URL.revokeObjectURL(url); // Cleanup the object URL
             document.body.removeChild(a);
         })
         .catch(error => {
@@ -375,6 +434,11 @@ function downloadFile(filePath) {
         });
 }
 
+// -------------------------
+// Breadcrumb Navigation
+// -------------------------
+
+// Generate breadcrumb HTML based on the current path
 function generateBreadcrumb(currentPath) {
     let breadcrumbHTML = `<a href="#" onclick="navigateToRoot()">Root</a>`;
     if (currentPath) {
@@ -389,8 +453,7 @@ function generateBreadcrumb(currentPath) {
     return breadcrumbHTML;
 }
 
+// Navigate back to the root directory
 function navigateToRoot() {
     location.hash = '';
 }
-
-

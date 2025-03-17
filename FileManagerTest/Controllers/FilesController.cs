@@ -14,28 +14,32 @@ namespace FileManagerApp.Controllers
     {
         private readonly IFileSystemService _fileSystemService;
 
+        // Constructor: Injects the file system service for handling file operations.
         public FilesController(IFileSystemService fileSystemService)
         {
             _fileSystemService = fileSystemService;
         }
 
-        // get basic info
+        // GET: api/files/rootInfo
+        // Retrieves basic information about the root folder.
         [HttpGet("rootInfo")]
         public async Task<IActionResult> GetRootFolderContents()
         {
-            // Get the absolute root path using GetFullPath with an empty relative path
+            // Get the absolute root path using the file system service.
             string absolutePath = _fileSystemService.GetFullPath("");
 
-            // Retrieve the directory content for the root folder
+            // Retrieve the contents of the root directory.
             var content = await _fileSystemService.GetDirectoryContentsAsync("");
 
             return Ok(new { AbsolutePath = absolutePath, Content = content });
         }
 
-        // Get directory contents
+        // GET: api/files/directory?path=...
+        // Retrieves the contents of a specified directory.
         [HttpGet("directory")]
         public async Task<IActionResult> GetDirectoryContents([FromQuery] string path = "")
         {
+            // Validate that the path is safe.
             if (!_fileSystemService.IsPathSafe(path))
                 return BadRequest("Invalid path");
 
@@ -43,10 +47,12 @@ namespace FileManagerApp.Controllers
             return Ok(contents);
         }
 
-        // Download a file
+        // GET: api/files/download?path=...
+        // Downloads a file from the specified path.
         [HttpGet("download")]
         public async Task<IActionResult> DownloadFile([FromQuery] string path)
         {
+            // Validate the file path.
             if (string.IsNullOrEmpty(path) || !_fileSystemService.IsPathSafe(path))
                 return BadRequest("Invalid file path");
 
@@ -54,10 +60,12 @@ namespace FileManagerApp.Controllers
             return File(fileContents, contentType, fileName);
         }
 
-        // Upload a file
+        // POST: api/files/upload?path=...
+        // Uploads a file to the specified directory.
         [HttpPost("upload")]
         public async Task<IActionResult> UploadFile([FromQuery] string path, IFormFile file)
         {
+            // Validate the upload request and path safety.
             if (file == null || string.IsNullOrEmpty(path) || !_fileSystemService.IsPathSafe(path))
                 return BadRequest("Invalid upload request");
 
@@ -65,9 +73,12 @@ namespace FileManagerApp.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        // POST: api/files/upload-root
+        // Uploads a file to the root directory.
         [HttpPost("upload-root")]
         public async Task<IActionResult> UploadFileToRoot(IFormFile file)
         {
+            // Ensure a file is provided.
             if (file == null)
                 return BadRequest("Invalid upload request");
 
@@ -75,10 +86,12 @@ namespace FileManagerApp.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        // Create a new directory
+        // POST: api/files/directory?path=...
+        // Creates a new directory at the specified path.
         [HttpPost("directory")]
         public async Task<IActionResult> CreateDirectory([FromQuery] string path)
         {
+            // Validate the directory path.
             if (string.IsNullOrEmpty(path) || !_fileSystemService.IsPathSafe(path))
                 return BadRequest("Invalid directory path");
 
@@ -86,10 +99,12 @@ namespace FileManagerApp.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        // Delete a file or directory
+        // DELETE: api/files?path=...
+        // Deletes a file or directory at the specified path.
         [HttpDelete]
         public async Task<IActionResult> DeleteItem([FromQuery] string path)
         {
+            // Validate the deletion request.
             if (string.IsNullOrEmpty(path) || !_fileSystemService.IsPathSafe(path))
                 return BadRequest("Invalid deletion request");
 
@@ -97,7 +112,8 @@ namespace FileManagerApp.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        // Search Route
+        // GET: api/files/search?query=...
+        // Searches for files and folders matching the query.
         [HttpGet("search")]
         public async Task<IActionResult> SearchFilesAndFolders([FromQuery] string query)
         {
@@ -110,10 +126,12 @@ namespace FileManagerApp.Controllers
             return Ok(results);
         }
 
-        // Get file or folder info
+        // GET: api/files/info?path=...
+        // Retrieves detailed information about a file or folder.
         [HttpGet("info")]
         public async Task<IActionResult> GetFileOrFolderInfo([FromQuery] string path)
         {
+            // Validate that the provided path is safe.
             if (string.IsNullOrEmpty(path) || !_fileSystemService.IsPathSafe(path))
             {
                 return BadRequest("Invalid path");
@@ -127,9 +145,5 @@ namespace FileManagerApp.Controllers
 
             return Ok(item);
         }
-
-
-
     }
 }
-
